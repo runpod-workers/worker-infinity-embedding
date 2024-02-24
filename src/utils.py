@@ -8,14 +8,8 @@ import numpy.typing as npt
 from pydantic import BaseModel, Field, conlist
 
 EmbeddingReturnType = npt.NDArray[Union[np.float32, np.float32]]
-
-# potential backwards compatibility to pydantic 1.X
-# pydantic 2.x is preferred by not strictly needed
 try:
     from pydantic import StringConstraints
-
-    # Note: adding artificial limit, this might reveal splitting issues on the client side
-    #      and is not a hard limit on the server side.
     INPUT_STRING = StringConstraints(max_length=8192 * 15, strip_whitespace=True)
     ITEMS_LIMIT = {
         "min_length": 1,
@@ -29,6 +23,32 @@ except ImportError:
         "min_items": 1,
         "max_items": 2048,
     }
+
+async def process_embedding_request(job_input, engines):
+    openai_input = job_input.get("openai_input")
+    model_name = openai_input.get("model")
+    engine = engines.get(model_name)
+    if not engine:
+        return create_error_response(f"Model '{model_name}' not found").model_dump()
+
+    embedding_input = openai_input.get("input")
+    if isinstance(embedding_input, str):
+        embedding_input = [embedding_input]
+    try:
+        async with engine:
+            embeddings, usage = await engine.embed(embedding_input)
+        result = list_embeddings_to_response(embeddings, model_name, usage)
+        return OpenAIEmbeddingResult(**result).model_dump()
+    except Exception as e:
+        return create_error_response(str(e)).model_dump()
+
+def process_model_info_request(job_input, engines):
+    openai_input = job_input.get("openai_input")
+    model_name = openai_input.get("model")
+    engine_args = engines.get(model_name)
+    if not engine_args:
+        return create_error_response(f"Model '{model_name}' not found").model_dump()
+    return OpenAIModelInfo(data=ModelInfo(id=engine_args.model_name_or_path, stats=dict(batch_size=engine_args.batch_size), backend=engine_args.engine)).model_dump()
 
 
 class ErrorResponse(BaseModel):
@@ -77,7 +97,7 @@ class ModelInfo(BaseModel):
 
 
 class OpenAIModelInfo(BaseModel):
-    data: ModelInfo
+    data: List[ModelInfo] = Field(default_factory=list)
     object: str = "list"
     
 class OpenAIEmbeddingResult(BaseModel):
@@ -105,3 +125,28 @@ def list_embeddings_to_response(
         ],
         usage=dict(prompt_tokens=usage, total_tokens=usage),
     )
+    
+def to_rerank_response(
+    scores: List[float],
+    model=str,
+    usage=int,
+    documents: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    if documents is None:
+        return dict(
+            model=model,
+            results=[
+                dict(relevance_score=score, index=count)
+                for count, score in enumerate(scores)
+            ],
+            usage=dict(prompt_tokens=usage, total_tokens=usage),
+        )
+    else:
+        return dict(
+            model=model,
+            results=[
+                dict(relevance_score=score, index=count, document=doc)
+                for count, (score, doc) in enumerate(zip(scores, documents))
+            ],
+            usage=dict(prompt_tokens=usage, total_tokens=usage),
+        )

@@ -1,2 +1,3 @@
 runpod==1.6.2
 infinity-emb[all]
+hf_transfer
