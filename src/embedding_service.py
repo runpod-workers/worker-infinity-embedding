@@ -1,6 +1,16 @@
 from config import EmbeddingServiceConfig
 from infinity_emb import EngineArgs, AsyncEmbeddingEngine
-from utils import create_error_response, OpenAIEmbeddingResult, OpenAIModelInfo, ModelInfo, list_embeddings_to_response, to_rerank_response
+from utils import OpenAIModelInfo, ModelInfo, list_embeddings_to_response, to_rerank_response
+
+        
+class EmbeddingModel:
+    def __init__(self, model_name, batch_size, backend):
+        print(f"Initializing model {model_name} with batch size {batch_size} and backend {backend}")
+        self.model_name = model_name
+        self.batch_size = batch_size
+        self.engine_args = EngineArgs(model_name_or_path=model_name, batch_size=batch_size, engine=backend, model_warmup=True)
+        self.engine = AsyncEmbeddingEngine.from_args(self.engine_args)
+        
 class EmbeddingService:
     def __init__(self):
         self.config = EmbeddingServiceConfig()
@@ -28,8 +38,8 @@ class EmbeddingService:
         
     async def openai_get_embeddings(self, embedding_input, model):
         embeddings, usage = await self._embed(embedding_input, model.engine)
-        result = list_embeddings_to_response(embeddings, model.engine_args.model_name_or_path, usage)
-        return OpenAIEmbeddingResult(**result).model_dump()
+        return [list_embeddings_to_response(embeddings, model.engine_args.model_name_or_path, usage)]
+
     
     async def infinity_embed(self, embedding_input, model):
         embeddings, usage = await self._embed(embedding_input, model.engine)
@@ -42,13 +52,3 @@ class EmbeddingService:
         if not return_docs:
             docs = None 
         return to_rerank_response(scores=scores, documents=docs, model=model.engine_args.model_name_or_path, usage=usage)
-        
-        
-        
-class EmbeddingModel:
-    def __init__(self, model_name, batch_size, backend):
-        print(f"Initializing model {model_name} with batch size {batch_size} and backend {backend}")
-        self.model_name = model_name
-        self.batch_size = batch_size
-        self.engine_args = EngineArgs(model_name_or_path=model_name, batch_size=batch_size, engine=backend)
-        self.engine = AsyncEmbeddingEngine.from_args(self.engine_args)

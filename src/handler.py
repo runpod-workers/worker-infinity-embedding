@@ -36,7 +36,7 @@ async def async_generator_handler(job):
         
     model = embedding_service.models.get(requested_model_name)
     if not model:
-        return create_error_response(f"Model '{requested_model_name}' not found").model_dump()
+        return create_error_response(f"Model '{requested_model_name}' not found.\n Request: {job}\n Available models: {list(embedding_service.models.keys())}").model_dump()
     
     try:
         return await processor_func(input_to_process, model)

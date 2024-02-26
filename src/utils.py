@@ -101,12 +101,10 @@ class OpenAIModelInfo(BaseModel):
     object: str = "list"
     
 class OpenAIEmbeddingResult(BaseModel):
-    object: Literal["embedding"] = "embedding"
+    object: str = "list"
     data: List[_EmbeddingObject]
     model: str
     usage: _Usage
-    id: str = Field(default_factory=lambda: f"infinity-{uuid4()}")
-    created: int = Field(default_factory=lambda: int(time.time()))
 
 def list_embeddings_to_response(
     embeddings: Union[EmbeddingReturnType, Iterable[EmbeddingReturnType]],
@@ -115,10 +113,11 @@ def list_embeddings_to_response(
 ) -> Dict[str, Any]:
     return dict(
         model=model,
+        object="list",
         data=[
             dict(
                 object="embedding",
-                embedding=emb,
+                embedding=emb.tolist(),
                 index=count,
             )
             for count, emb in enumerate(embeddings)
