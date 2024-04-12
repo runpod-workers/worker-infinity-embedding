@@ -5,7 +5,7 @@ FROM runpod/base:0.6.1-cuda${WORKER_CUDA_VERSION}
 # Python dependencies
 COPY builder/requirements.txt /requirements.txt
 RUN python3.11 -m pip install --upgrade pip && \
-    python3.11 -m pip install --upgrade -r /requirements.txt --no-cache-dir && \
+    python3.11 -m pip install -r /requirements.txt --no-cache-dir && \
     rm /requirements.txt
 
 ENV HF_HOME=/runpod-volume
