@@ -1,3 +1,2 @@
 runpod==1.6.2
-infinity-emb[all]
-hf_transfer
+infinity-emb[all]==0.0.32
