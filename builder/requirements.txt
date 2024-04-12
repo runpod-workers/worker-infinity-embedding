@@ -1,2 +1,3 @@
 runpod==1.6.2
 infinity-emb[all]==0.0.32
+einops # deployment of custom code with nomic
