@@ -8,7 +8,7 @@ RUN python3.11 -m pip install --upgrade pip && \
     python3.11 -m pip install --upgrade -r /requirements.txt --no-cache-dir && \
     rm /requirements.txt
 
-ENV SENTENCE_TRANSFORMERS_HOME=/runpod-volume
+ENV HF_HOME=/runpod-volume
 
 # Add src files (Worker Template)
 ADD src .
