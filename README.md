@@ -15,7 +15,8 @@ You can directly use the following docker images and configure them via Environm
     * Example - Single Model: `BAAI/bge-small-en-v1.5;`
     * Example - Multiple Models: `BAAI/bge-small-en-v1.5;intfloat/e5-large-v2;`
 * `BATCH_SIZES`: Batch size for each model separated by semicolon. If not provided, default batch size of 32 will be used. 
-* `BACKEND`: Backend for all models. If not provided, default backend of `torch` will be used.
+* `BACKEND`: Backend for all models. Recommended is `torch` which is the default. Other options are `optimum` or `ctranslate2`.
+* `DTYPES`: Dtype, by default `auto` or `fp16`.
 
 ## Supported Models
 <details>
