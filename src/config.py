@@ -5,6 +5,10 @@ from functools import cached_property
 DEFAULT_BATCH_SIZE = 32
 DEFAULT_BACKEND = "torch"
 
+if not os.environ.get("INFINITY_QUEUE_SIZE"):
+    # how many items can be in the queue
+    os.environ["INFINITY_QUEUE_SIZE"] = 48000
+
 
 class EmbeddingServiceConfig:
     def __init__(self):
