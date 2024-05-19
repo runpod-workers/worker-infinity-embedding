@@ -17,11 +17,17 @@ async def async_generator_handler(job: dict[str, Any]):
         if openai_route and openai_route == "/v1/models":
             call_fn, kwargs = embedding_service.route_openai_models, {}
         elif openai_route and openai_route == "/v1/embeddings":
+            model_name = openai_input.get("model")
             if not openai_input:
                 return create_error_response("Missing input").model_dump()
+            if not model_name:
+                return create_error_response(
+                    "Did not specify model in openai_input"
+                ).model_dump()
             call_fn, kwargs = embedding_service.route_openai_get_embeddings, {
                 "embedding_input": openai_input.get("input"),
-                "model_name": openai_input.get("model"),
+                "model_name": model_name,
+                "return_as_list": True,
             }
         else:
             return create_error_response(

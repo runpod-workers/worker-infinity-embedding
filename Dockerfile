@@ -1,4 +1,4 @@
-ARG WORKER_CUDA_VERSION=11.8.0
+ARG WORKER_CUDA_VERSION=12.1.0
 FROM runpod/base:0.6.1-cuda${WORKER_CUDA_VERSION}
 
 
@@ -7,7 +7,7 @@ COPY builder/requirements.txt /requirements.txt
 RUN python3.11 -m pip install --upgrade pip && \
     python3.11 -m pip install -r /requirements.txt --no-cache-dir && \
     rm /requirements.txt
-RUN pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu121
+RUN pip uninstall torc -y && pip install --pre torch==2.4.0.dev20240518+cu121 --index-url https://download.pytorch.org/whl/nightly/cu121 --no-cache-dir
 ENV HF_HOME=/runpod-volume
 
 # Add src files (Worker Template)

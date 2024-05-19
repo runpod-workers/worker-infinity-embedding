@@ -55,7 +55,10 @@ class EmbeddingService:
         return list(self.engine_array.engines_dict.keys())
 
     async def route_openai_get_embeddings(
-        self, embedding_input: str | list[str], model_name: str
+        self,
+        embedding_input: str | list[str],
+        model_name: str,
+        return_as_list: bool = False,
     ):
         """returns embeddings for the input text"""
         if not self.is_running:
@@ -64,7 +67,14 @@ class EmbeddingService:
             embedding_input = [embedding_input]
 
         embeddings, usage = await self.engine_array[model_name].embed(embedding_input)
-        return list_embeddings_to_response(embeddings, model=model_name, usage=usage)
+        if return_as_list:
+            return [
+                list_embeddings_to_response(embeddings, model=model_name, usage=usage)
+            ]
+        else:
+            return list_embeddings_to_response(
+                embeddings, model=model_name, usage=usage
+            )
 
     async def infinity_rerank(
         self, query: str, docs: str, return_docs: str, model_name: str
