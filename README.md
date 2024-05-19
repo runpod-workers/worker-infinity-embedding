@@ -12,9 +12,9 @@ You can directly use the following docker images and configure them via Environm
 
 ## RunPod Template Environment Variables
 * `MODEL_NAMES`: HuggingFace repo of a single model or multiple models separated by semicolon.      
-    * Example - Single Model: `BAAI/bge-small-en-v1.5`
-    * Example - Multiple Models: `BAAI/bge-small-en-v1.5;intfloat/e5-large-v2`
-* `BATCH_SIZES`: Batch size for each model separated by semicolon. If not provided, default batch size of 128 will be used. 
+    * Example - Single Model: `BAAI/bge-small-en-v1.5;`
+    * Example - Multiple Models: `BAAI/bge-small-en-v1.5;intfloat/e5-large-v2;`
+* `BATCH_SIZES`: Batch size for each model separated by semicolon. If not provided, default batch size of 32 will be used. 
 * `BACKEND`: Backend for all models. If not provided, default backend of `torch` will be used.
 
 ## Supported Models
@@ -25,10 +25,6 @@ You can directly use the following docker images and configure them via Environm
   - All models reuploaded on the sentence transformers org https://huggingface.co/sentence-transformers / sbert.net. 
 
   With the command `--engine torch` the model must be compatible with sentence-transformers library
-  
-  With the command `--engine ctranslate2`
-    - only `BERT` models are supported.
-    - only models from Huggingface are supported.
   
   For the latest trends, you might want to check out one of the following models.
     https://huggingface.co/spaces/mteb/leaderboard
@@ -84,7 +80,12 @@ Inputs:
 * `return_docs`: whether to return the reranked documents or not
 
 
+### Additional testing
 
+For the Reranker models 
+```bash
+python src/handler.py --test_input '{"input": {"query": "Where is paris?", "docs": ["Paris is in France", "Rome is in Italy"], "model": "mixedbread-ai/mxbai-rerank-xsmall-v1"}}'
+```
     
 
 <!-- <div align="center">

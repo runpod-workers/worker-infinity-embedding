@@ -1,54 +1,65 @@
 from config import EmbeddingServiceConfig
-from infinity_emb import EngineArgs, AsyncEmbeddingEngine
+from infinity_emb.engine import AsyncEngineArray, EngineArgs
 from utils import OpenAIModelInfo, ModelInfo, list_embeddings_to_response, to_rerank_response
 
-        
-class EmbeddingModel:
-    def __init__(self, model_name, batch_size, backend):
-        print(f"Initializing model {model_name} with batch size {batch_size} and backend {backend}")
-        self.model_name = model_name
-        self.batch_size = batch_size
-        self.engine_args = EngineArgs(model_name_or_path=model_name, batch_size=batch_size, engine=backend, model_warmup=True)
-        self.engine = AsyncEmbeddingEngine.from_args(self.engine_args)
+import asyncio
         
 class EmbeddingService:
     def __init__(self):
         self.config = EmbeddingServiceConfig()
-        self.models = self._initialize_models()
-            
-    def _initialize_models(self):
-        models = {}
+        engine_args = []
         for model_name, batch_size in zip(self.config.model_names, self.config.batch_sizes):
-            models[model_name] = EmbeddingModel(model_name, batch_size, self.config.backend)
-        return models
+            engine_args.append(EngineArgs(
+                model_name_or_path=model_name, 
+                batch_size=batch_size, 
+                engine=self.config.backend, 
+                model_warmup=False,
+                lengths_via_tokenize=True
+            ))
+            
+        self.engine_array = AsyncEngineArray.from_args(engine_args)
+        self.is_running = False
+        self.sepamore = asyncio.Semaphore(1)
+        
+    async def start(self):
+        """starts the engine background loop"""
+        async with self.sepamore:
+            if not self.is_running: 
+                await self.engine_array.astart()
+                self.is_running = False
     
-    async def _embed(self, input, engine):
-        if not isinstance(input, list):
-            input = [input]
-        async with engine:
-            embeddings, usage = await engine.embed(input)
+    async def stop(self):
+        """stops the engine background loop"""
+        async with self.sepamore:
+            if self.is_running: 
+                await self.engine_array.astop()
+                self.is_running = False
+    
+    async def route_openai_models(self) -> OpenAIModelInfo:
+        return OpenAIModelInfo(data=[
+            ModelInfo(id=model_id,
+                      stats={})
+                    for model_id in self.list_models()]
+            ).model_dump()
+    
+    def list_models(self) -> list[str]:
+        return list(self.engine_array.engines_dict.keys())
+    
+    async def route_openai_get_embeddings(self, embedding_input: str | list[str], model_name: str):
+        """returns embeddings for the input text"""
+        if not self.is_running:
+            await self.start()
+        if not isinstance(embedding_input, list):
+            embedding_input = [embedding_input]
+        
+        embeddings, usage = await self.engine_array[model_name].embed(embedding_input)
         return embeddings, usage
     
-    def openai_get_models(self):
-        return OpenAIModelInfo(data=[
-            ModelInfo(id=model.engine_args.model_name_or_path,
-                      stats=dict(batch_size=model.engine_args.batch_size,
-                        	backend=model.engine_args.engine.name))
-                    for model in self.models.values()]).model_dump()
-        
-    async def openai_get_embeddings(self, embedding_input, model):
-        embeddings, usage = await self._embed(embedding_input, model.engine)
-        return [list_embeddings_to_response(embeddings, model.engine_args.model_name_or_path, usage)]
-
-    
-    async def infinity_embed(self, embedding_input, model):
-        embeddings, usage = await self._embed(embedding_input, model.engine)
-        return list_embeddings_to_response(embeddings, model.engine_args.model_name_or_path, usage)
-    
-    async def infinity_rerank(self, input, model):
-        query, docs, return_docs = input["query"], input["docs"], input["return_docs"]
-        async with model.engine:
-            scores, usage = await model.engine.rerank(query=query, docs=docs, raw_scores=False)
+    async def infinity_rerank(self, query: str, docs: str, return_docs: str, model_name: str):
+        """Rerank the documents based on the query"""
+        if not self.is_running:
+            await self.start()
+        scores, usage = await self.engine_array[model_name].rerank(query=query, docs=docs, raw_scores=False)
         if not return_docs:
             docs = None 
-        return to_rerank_response(scores=scores, documents=docs, model=model.engine_args.model_name_or_path, usage=usage)
+        return to_rerank_response(scores=scores, documents=docs, model=model_name, usage=usage)
