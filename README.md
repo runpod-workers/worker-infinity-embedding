@@ -84,7 +84,7 @@ Inputs:
 
 For the Reranker models 
 ```bash
-python src/handler.py --test_input '{"input": {"query": "Where is paris?", "docs": ["Paris is in France", "Rome is in Italy"], "model": "mixedbread-ai/mxbai-rerank-xsmall-v1"}}'
+python src/handler.py --test_input '{"input": {"query": "Where is paris?", "docs": ["Paris is in France", "Rome is in Italy"], "model": "BAAI/bge-reranker-v2-m3"}}'
 ```
     
 

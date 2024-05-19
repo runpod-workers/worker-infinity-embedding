@@ -14,14 +14,15 @@ class EmbeddingService:
     def __init__(self):
         self.config = EmbeddingServiceConfig()
         engine_args = []
-        for model_name, batch_size in zip(
-            self.config.model_names, self.config.batch_sizes
+        for model_name, batch_size, dtype in zip(
+            self.config.model_names, self.config.batch_sizes, self.config.dtypes
         ):
             engine_args.append(
                 EngineArgs(
                     model_name_or_path=model_name,
                     batch_size=batch_size,
                     engine=self.config.backend,
+                    dtype=dtype,
                     model_warmup=False,
                     lengths_via_tokenize=True,
                 )
@@ -63,7 +64,7 @@ class EmbeddingService:
             embedding_input = [embedding_input]
 
         embeddings, usage = await self.engine_array[model_name].embed(embedding_input)
-        return embeddings, usage
+        return list_embeddings_to_response(embeddings, model=model_name, usage=usage)
 
     async def infinity_rerank(
         self, query: str, docs: str, return_docs: str, model_name: str
