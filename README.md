@@ -8,7 +8,7 @@ Based on [Infinity Text Embedding Engine](https://github.com/michaelfeil/infinit
 ## Docker Image
 You can directly use the following docker images and configure them via Environment Variables.
 * CUDA 11.8: `not built`
-* CUDA 12.1: `michaelf34/runpod-infinity-worker:0.0.4`
+* CUDA 12.1: `michaelf34/runpod-infinity-worker:0.0.5-cu121`
 
 ## RunPod Template Environment Variables
 * `MODEL_NAMES`: HuggingFace repo of a single model or multiple models separated by semicolon.      
