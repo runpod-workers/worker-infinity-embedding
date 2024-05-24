@@ -58,5 +58,5 @@ async def async_generator_handler(job: dict[str, Any]):
 
 if __name__ == "__main__":
     runpod.serverless.start(
-        {"handler": async_generator_handler, "concurrency_modifier": lambda x: 3000}
+        {"handler": async_generator_handler, "concurrency_modifier": lambda x: 300}
     )
