@@ -46,3 +46,7 @@ class EmbeddingServiceConfig:
     def dtypes(self) -> list[str]:
         dtypes = self._get_no_required_multi("DTYPES", "auto")
         return dtypes
+    
+    @cached_property
+    def runpod_max_concurrency(self) -> int:
+        return int(os.environ.get("RUNPOD_MAX_CONCURRENCY", 300))
