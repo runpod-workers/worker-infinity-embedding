@@ -47,6 +47,12 @@ async def async_generator_handler(job: dict[str, Any]):
                 "embedding_input": job_input.get("input"),
                 "model_name": job_input.get("model"),
             }
+        # handle image urls (for image embeddings)
+        elif job_input.get("image_input"):
+            call_fn, kwargs = embedding_service.route_get_image_embeddings, {
+                "image_input": job_input.get("image_input"),
+                "model_name": job_input.get("model"),
+            }
         else:
             return create_error_response(f"Invalid input: {job}").model_dump()
     try:
