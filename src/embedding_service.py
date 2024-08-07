@@ -57,7 +57,6 @@ class EmbeddingService:
     async def route_openai_get_embeddings(
         self,
         embedding_input: str | list[str],
-        image_input: str | list[str],
         model_name: str,
         return_as_list: bool = False,
     ):
