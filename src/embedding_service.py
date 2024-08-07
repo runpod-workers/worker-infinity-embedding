@@ -89,7 +89,7 @@ class EmbeddingService:
         if not isinstance(image_input, list):
             image_input = [image_input]
 
-        embeddings, usage = await self.engine_array[model_name].embed_image(image_input)
+        embeddings, usage = await self.engine_array[model_name].image_embed(image_input)
         if return_as_list:
             return [
                 list_embeddings_to_response(embeddings, model=model_name, usage=usage)
