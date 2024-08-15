@@ -30,6 +30,7 @@ You can directly use the following docker images and configure them via Environm
 | 11.8.0       | `runpod/worker-infinity-embedding:stable-cuda11.8.0`        | `runpod/worker-infinity-embedding:dev-cuda11.8.0`   | Available on all RunPod Workers without additional selection needed. |
 | 12.1.0       | `runpod/worker-infinity-embedding:stable-cuda12.1.0` | `runpod/worker-infinity-embedding:dev-cuda12.1.0` | When creating an Endpoint, select CUDA Version 12.4, 12.3, 12.2 and 12.1 in the filter. About 10% less total available machines than 11.8.0, but higher performance. |
 
+**[NOTE]** Latest image version (pre) `runpod/worker-infinity-text-embedding:0.0.1-cuda12.1.0`
 ### 2. Select your models and configure your deployment with Environment Variables
 * `MODEL_NAMES`
     
