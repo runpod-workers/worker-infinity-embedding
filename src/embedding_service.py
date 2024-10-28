@@ -76,6 +76,28 @@ class EmbeddingService:
                 embeddings, model=model_name, usage=usage
             )
 
+    async def route_get_image_embeddings(
+        self,
+        image_input: str | list[str],
+        model_name: str,
+        return_as_list: bool = False,
+    ):
+        """returns embeddings for the input image urls"""
+        if not self.is_running:
+            await self.start()
+        if not isinstance(image_input, list):
+            image_input = [image_input]
+
+        embeddings, usage = await self.engine_array[model_name].image_embed(image_input)
+        if return_as_list:
+            return [
+                list_embeddings_to_response(embeddings, model=model_name, usage=usage)
+            ]
+        else:
+            return list_embeddings_to_response(
+                embeddings, model=model_name, usage=usage
+            )
+
     async def infinity_rerank(
         self, query: str, docs: str, return_docs: str, model_name: str
     ):

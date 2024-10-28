@@ -124,6 +124,7 @@ You may use `/run` (asynchronous, start job and return job ID) or `/runsync` (sy
 Inputs:
 * `model`: name of one of the deployed models.
 * `input`: single text string or list of texts to embed
+* `image_input`: single url or list of urls to embed (for use with CLIP models)
 
 ### Reranking
 Inputs:
