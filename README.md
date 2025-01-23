@@ -124,6 +124,15 @@ You may use `/run` (asynchronous, start job and return job ID) or `/runsync` (sy
 Inputs:
 * `model`: name of one of the deployed models.
 * `input`: single text string or list of texts to embed
+#### Sample Usage on runpod.io
+```json
+{
+    "input": {
+        "model": "BAAI/bge-small-en-v1.5",
+        "input": "Hello World"
+    }
+}
+```
 
 ### Reranking
 Inputs:
@@ -131,6 +140,21 @@ Inputs:
 * `query`: query text (single string)
 * `docs`: list of documents to rerank by query
 * `return_docs`: whether to return the reranked documents or not
+#### Sample Usage on runpod.io
+```json
+{
+    "input": {
+        "model": "BAAI/bge-reranker-large",
+        "query": "Which product has warranty coverage?",
+        "docs": [
+            "Product A comes with a 2-year warranty",
+            "Product B is available in red and blue colors",
+            "All electronics include a standard 1-year warranty"
+        ],
+        "return_docs": true
+    }
+}
+```
 
 
 # Acknowledgements
