@@ -20,6 +20,7 @@ class EmbeddingService:
             engine_args.append(
                 EngineArgs(
                     model_name_or_path=model_name,
+                    revision=os.path.basename(model_name),
                     batch_size=batch_size,
                     engine=self.config.backend,
                     dtype=dtype,
