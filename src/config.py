@@ -48,10 +48,12 @@ class EmbeddingServiceConfig:
         cache_paths: list[str] = [
             MODEL_CACHE_PATH_TEMPLATE.format(
                 # the model is always the first element
-                model=repository_and_revision[0],
-                path=urljoin(repository_and_revision[0], repository_and_revision[1])
-                if len(repository_and_revision) > 1
-                else repository_and_revision[0],
+                path=urljoin(
+                    repository_and_revision[0],
+                    repository_and_revision[1]
+                    if len(repository_and_revision) > 1
+                    else repository_and_revision[0],
+                ),
             )
             # the repository is split into the model and revision by the last colon
             for repository_and_revision in (
