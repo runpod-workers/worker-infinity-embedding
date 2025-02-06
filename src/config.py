@@ -18,6 +18,27 @@ MODEL_CACHE_PATH_TEMPLATE = "/runpod/cache/{path}"
 CONFIG_MESSAGE_TEMPLATE = "{message} [see https://github.com/runpod-workers/worker-infinity-embedding for more information]"
 
 
+def topath(raw: str) -> str:
+    raw = raw.strip()
+    if ":" in raw:
+        model, branch = raw.rsplit(":", maxsplit=1)
+    else:
+        model, branch = raw, "main"
+    if "/" not in model:
+        raise ValueError(
+            f"invalid model: expected one in the form user/model[:path], but got {model}"
+        )
+    user, model = model.rsplit("/", maxsplit=1)
+    return "/".join(c.strip("/") for c in (user, model, branch))
+
+
+def modelpaths(path: str = "") -> list[str]:
+    raw = os.environ.get("RUNPOD_HUGGINGFACE_MODEL", path)
+    if not raw:
+        return []
+    return [topath(m) for m in raw.split(",")]
+
+
 class EmbeddingServiceConfig:
     def __init__(self):
         load_dotenv()
@@ -47,29 +68,7 @@ class EmbeddingServiceConfig:
                     message="MODEL_NAMES is deprecated, use RUNPOD_HUGGINGFACE_MODEL"
                 )
             )
-        cache_paths: list[str] = [
-            MODEL_CACHE_PATH_TEMPLATE.format(
-                # the model is always the first element
-                path=urljoin(
-                    repository_and_revision[0],
-                    repository_and_revision[1]
-                    if len(repository_and_revision) > 1
-                    else repository_and_revision[0],
-                ),
-            )
-            # the repository is split into the model and revision by the last colon
-            for repository_and_revision in (
-                repository.rsplit(":", 1)
-                for repository in (
-                    *(
-                        os.environ.get(
-                            "RUNPOD_HUGGINGFACE_MODEL", deprecated_model_names
-                        ).split(",")
-                    ),
-                    *deprecated_model_names.split(";"),
-                )
-            )
-        ]
+        cache_paths: list[str] = modelpaths(deprecated_model_names)
         if not cache_paths:
             raise ValueError(
                 CONFIG_MESSAGE_TEMPLATE.format(
