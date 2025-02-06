@@ -38,7 +38,9 @@ class EmbeddingServiceConfig:
     @cached_property
     def model_names(self) -> list[str]:
         # check if the legacy env var is defined
-        deprecated_model_names = os.environ.get("MODEL_NAMES", "")
+        deprecated_model_names = os.environ.get(
+            "MODEL_NAMES", "/BAAI/bge-small-en-v1.5"
+        )
         if not deprecated_model_names:
             logger.warn(
                 CONFIG_MESSAGE_TEMPLATE.format(
@@ -59,7 +61,11 @@ class EmbeddingServiceConfig:
             for repository_and_revision in (
                 repository.rsplit(":", 1)
                 for repository in (
-                    *(os.environ.get("RUNPOD_HUGGINGFACE_MODEL", "").split(",")),
+                    *(
+                        os.environ.get(
+                            "RUNPOD_HUGGINGFACE_MODEL", deprecated_model_names
+                        ).split(",")
+                    ),
                     *deprecated_model_names.split(";"),
                 )
             )
