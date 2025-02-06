@@ -6,7 +6,7 @@ from utils import (
     list_embeddings_to_response,
     to_rerank_response,
 )
-
+import os
 import asyncio
 
 
