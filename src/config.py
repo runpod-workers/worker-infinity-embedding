@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from functools import cached_property
 from runpod import RunPodLogger
+from urllib.parse import urljoin
 
 logger = RunPodLogger()
 
@@ -12,7 +13,7 @@ if not os.environ.get("INFINITY_QUEUE_SIZE"):
     # how many items can be in the queue
     os.environ["INFINITY_QUEUE_SIZE"] = "48000"
 
-MODEL_CACHE_PATH_TEMPLATE = "/runpod/cache/{model}/{revision}"
+MODEL_CACHE_PATH_TEMPLATE = "/runpod/cache/{path}"
 
 CONFIG_MESSAGE_TEMPLATE = "{message} [see https://github.com/runpod-workers/worker-infinity-embedding for more information]"
 
@@ -48,10 +49,9 @@ class EmbeddingServiceConfig:
             MODEL_CACHE_PATH_TEMPLATE.format(
                 # the model is always the first element
                 model=repository_and_revision[0],
-                # the revision is the second element if it exists
-                revision=repository_and_revision[1]
+                path=urljoin(repository_and_revision[0], repository_and_revision[1])
                 if len(repository_and_revision) > 1
-                else "main",
+                else repository_and_revision[0],
             )
             # the repository is split into the model and revision by the last colon
             for repository_and_revision in (
