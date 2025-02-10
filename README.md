@@ -32,13 +32,35 @@ You can directly use the following docker images and configure them via Environm
 
 **[NOTE]** Latest image version (pre) `runpod/worker-infinity-text-embedding:0.0.1-cuda12.1.0`
 ### 2. Select your models and configure your deployment with Environment Variables
-* `MODEL_NAMES`
-    
+* `MODEL_NAMES` ⚠️ **DEPRECATED**
+    > [!WARNING]
+    > This environment variable is deprecated. Please use `RUNPOD_HUGGINGFACE_MODEL` instead.
+
     HuggingFace repo of a single model or multiple models separated by semicolon.      
     
     - Examples:
         - **Single** Model: `BAAI/bge-small-en-v1.5`
         - **Multiple** Models: `BAAI/bge-small-en-v1.5;intfloat/e5-large-v2;`
+* `RUNPOD_HUGGINGFACE_MODEL`
+    
+    HuggingFace model repository path in the format `user/model` or `user/model:revision` to specify a particular model version. Models will be automatically downloaded and cached before container startup.
+    
+    - Examples:
+        - **Single** Model: `BAAI/bge-small-en-v1.5`
+        - **Multiple** Models: `BAAI/bge-small-en-v1.5,intfloat/e5-large-v2`
+* `RUNPOD_HUGGINGFACE_TOKEN`
+
+    HuggingFace token for accessing private models.
+    
+    > [!WARNING]
+    > Both `RUNPOD_HUGGINGFACE_TOKEN` and `RUNPOD_HUGGINGFACE_USER` must be provided together to access private models. Providing only one will not work.
+
+* `RUNPOD_HUGGINGFACE_USER` 
+
+    HuggingFace username for accessing private models.
+    
+    > [!WARNING]
+    > Both `RUNPOD_HUGGINGFACE_TOKEN` and `RUNPOD_HUGGINGFACE_USER` must be provided together to access private models. Providing only one will not work.
 * `BATCH_SIZES`
 
     Batch Size for each model separated by semicolon. 
