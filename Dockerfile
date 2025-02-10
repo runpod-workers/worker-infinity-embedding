@@ -8,15 +8,15 @@ ARG WORKER_CUDA_VERSION=12.1.0
 
 # Python dependencies.
 
-RUN --mount=type=cache,target=/root/.cache/pip python3.11 -m pip install --upgrade pip
+RUN --mount-type=cache,target=/root/.cache/pip python3.11 -m pip install --upgrade pip
 
 # we're always going to do this. important to do this FIRST - it can take >2m and we want to cache the result as early as possible.
 # TODO: pin this to a specific version 
 
-RUN --mount=type=cache,target=/root/.cache/pip python3.11 -m pip install torch torchvision torchaudio
+RUN --mount-type=cache,target=/root/.cache/pip python3.11 -m pip install torch torchvision torchaudio
 
 # ourother requirements may change; updating the version of infinity embedding, for instance.
 COPY builder/requirements.txt /requirements.txt
-RUN --mount=type=cache,target=/root/.cache/pip python3.11 -m pip install -r /requirements.txt
+RUN --mount-type=cache,target=/root/.cache/pip python3.11 -m pip install -r /requirements.txt
 COPY ./src /src
 CMD python3.11 -u /src/handler.py
