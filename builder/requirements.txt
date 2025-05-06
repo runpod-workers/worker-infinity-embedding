@@ -1,4 +1,4 @@
 runpod~=1.7.0
-infinity-emb[all,onnxruntime-gpu]==0.0.53
+infinity-emb[all,onnxruntime-gpu,cache,ct2,logging,optimum,server,tensorrt,torch]==0.0.73
 einops # deployment of custom code with nomic
-git+https://github.com/pytorch-labs/float8_experimental.git@f7a920d2c53db8912f2a0c1d9040dbe71a88906d
+git+https://github.com/pytorch-labs/float8_experimental.git

@@ -1,8 +1,8 @@
-ARG WORKER_CUDA_VERSION=12.1.0
-FROM runpod/base:0.6.2-cuda${WORKER_CUDA_VERSION}
+ARG WORKER_CUDA_VERSION=12.4.1
+FROM runpod/pytorch:2.4.0-py3.11-cuda${WORKER_CUDA_VERSION}-devel-ubuntu22.04
 
 #Reinitialize, as its lost after the FROM command
-ARG WORKER_CUDA_VERSION=12.1.0
+ARG WORKER_CUDA_VERSION=12.4.1
 
 # Python dependencies
 COPY builder/requirements.txt /requirements.txt
@@ -12,7 +12,7 @@ RUN python3.11 -m pip install --upgrade pip && \
 
 RUN pip uninstall torch -y && \
     CUDA_VERSION_SHORT=$(echo ${WORKER_CUDA_VERSION} | cut -d. -f1,2 | tr -d .) && \
-    pip install --pre torch==2.4.0.dev20240518+cu${CUDA_VERSION_SHORT} --index-url https://download.pytorch.org/whl/nightly/cu${CUDA_VERSION_SHORT} --no-cache-dir
+    pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/test/cu${CUDA_VERSION_SHORT} --no-cache-dir
 
 ENV HF_HOME=/runpod-volume
 
