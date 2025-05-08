@@ -10,7 +10,7 @@
    1. [List Models](#list-models)
    2. [Create Embeddings](#create-embeddings)
    3. [Rerank Documents](#rerank-documents)
-4. [Usage Examples](#usage-examples)
+4. [Usage](#usage)
 5. [Further Documentation](#further-documentation)
 6. [Acknowledgements](#acknowledgements)
 
