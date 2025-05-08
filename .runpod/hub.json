@@ -3,7 +3,7 @@
   "description": "High-throughput, OpenAI-compatible text embedding & reranker powered by Infinity",
   "type": "serverless",
   "category": "embedding",
-  "iconUrl": "https://dummyimage.com/100x100/5a2ca0/fff&text=e",
+  "iconUrl": "https://dummyimage.com/100x100/a0a25a/fff&text=I",
   "config": {
     "runsOn": "GPU",
     "containerDiskInGb": 20,
