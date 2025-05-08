@@ -3,7 +3,15 @@ from utils import create_error_response
 from typing import Any
 from embedding_service import EmbeddingService
 
-embedding_service = EmbeddingService()
+# Gracefully catch configuration errors (e.g. missing env vars) so the user sees
+# a clean message instead of a full Python traceback when the container starts.
+try:
+    embedding_service = EmbeddingService()
+except Exception as e:  # noqa: BLE001  (intercept everything on startup)
+    import sys
+
+    sys.stderr.write(f"\nstartup failed: {e}\n")
+    sys.exit(1)
 
 
 async def async_generator_handler(job: dict[str, Any]):
