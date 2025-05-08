@@ -1,10 +1,14 @@
-# Infinity Embedding Serverless Worker
+![Infinity Embedding Worker Banner](https://cpjrphpz3t5wbwfe.public.blob.vercel-storage.com/worker-infinity-embedding_banner-9n86vTARpwknMZYnXHAUr7xJisiWXs.jpeg)
+
+---
+
+High-throughput, OpenAI-compatible text embedding & reranker powered by [Infinity](https://github.com/michaelfeil/infinity)
+
+---
 
 [![RunPod](https://api.runpod.io/badge/runpod-workers/worker-infinity-embedding)](https://www.runpod.io/console/hub/runpod-workers/worker-infinity-embedding)
 
-> High-throughput, OpenAI-compatible text embedding & reranker powered by [Infinity](https://github.com/michaelfeil/infinity)
-
-## Table of Contents
+---
 
 1. [Quickstart](#quickstart)
 2. [Endpoint Configuration](#endpoint-configuration)
