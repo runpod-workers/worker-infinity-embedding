@@ -1,162 +1,185 @@
-<div align="center">
-
 # Infinity Embedding Serverless Worker
 
-Deploy almost any Text Embedding and Reranker models with high throughput OpenAI-compatible Endpoints on RunPod Serverless, powered by the fastest embedding inference engine, built for serving - [Infinity](https://github.com/michaelfeil/infinity)
+> High-throughput, OpenAI-compatible text embedding & reranker powered by [Infinity](https://github.com/michaelfeil/infinity)
 
+## Table of Contents
 
-</div>
+1. [Quickstart](#quickstart)
+2. [Endpoint Configuration](#endpoint-configuration)
+3. [API Specification](#api-specification)
+   1. [List Models](#list-models)
+   2. [Create Embeddings](#create-embeddings)
+   3. [Rerank Documents](#rerank-documents)
+4. [Usage Examples](#usage-examples)
+5. [Further Documentation](#further-documentation)
+6. [Acknowledgements](#acknowledgements)
 
-# Supported Models
-When using `torch` backend, you can deploy any models supported by the sentence-transformers library.
+---
 
-This also means that you can deploy any model from the [Massive Text Embedding Benchmark (MTEB) Leaderboard](https://huggingface.co/spaces/mteb/leaderboard), which is currently the most popular and comprehensive leaderboard for embedding models.
+## Quickstart
 
+1. 🐳 **Pull an image** – use the tag shown on the latest [GitHub release page](https://github.com/runpod-workers/worker-infinity-embedding/releases) (e.g. `runpod/worker-infinity-embedding:<version>`)
+2. 🔧 **Configure** – set at least `MODEL_NAMES` (see [Endpoint Configuration](#endpoint-configuration))
+3. 🚀 **Deploy** – create a [RunPod Serverless endpoint](https://docs.runpod.io/serverless/endpoints/manage-endpoints)
+4. 🧪 **Call the API** – follow the example in the [Usage](#usage) section
 
+---
 
-# Setting up the Serverless Endpoint
-## Option 1: Deploy any models directly from RunPod Console with Pre-Built Docker Image
+## Endpoint Configuration
 
-> [!NOTE]  
-> We are adding a UI for deployment similar to [Worker vLLM](https://github.com/runpod-workers/worker-vllm), but for now, you can manually create the endpoint with the regular serverless configurator.
+All behaviour is controlled through environment variables:
 
+| Variable                 | Required | Default | Description                                                                                                      |
+| ------------------------ | -------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| `MODEL_NAMES`            | **Yes**  | —       | One or more Hugging-Face model IDs. Separate multiple IDs with a semicolon.<br>Example: `BAAI/bge-small-en-v1.5` |
+| `BATCH_SIZES`            | No       | `32`    | Per-model batch size; semicolon-separated list matching `MODEL_NAMES`.                                           |
+| `BACKEND`                | No       | `torch` | Inference engine for _all_ models: `torch`, `optimum`, or `ctranslate2`.                                         |
+| `DTYPES`                 | No       | `auto`  | Precision per model (`auto`, `fp16`, `fp8`). Semicolon-separated, must match `MODEL_NAMES`.                      |
+| `INFINITY_QUEUE_SIZE`    | No       | `48000` | Max items queueable inside the Infinity engine.                                                                  |
+| `RUNPOD_MAX_CONCURRENCY` | No       | `300`   | Max concurrent requests the RunPod wrapper will accept.                                                          |
 
-We offer a pre-built Docker Image for the Infinity Embedding Serverless Worker that you can configure entirely with Environment Variables when creating the Endpoint:
+---
 
-### 1. Select Worker Image Version
-You can directly use the following docker images and configure them via Environment Variables.
-| CUDA Version | Stable (Latest Release)                 | Development (Latest Commit)             | Note                                                        |
-|--------------|-----------------------------------|-----------------------------------|----------------------------------------------------------------------|
-| 11.8.0       | `runpod/worker-infinity-embedding:stable-cuda11.8.0`        | `runpod/worker-infinity-embedding:dev-cuda11.8.0`   | Available on all RunPod Workers without additional selection needed. |
-| 12.1.0       | `runpod/worker-infinity-embedding:stable-cuda12.1.0` | `runpod/worker-infinity-embedding:dev-cuda12.1.0` | When creating an Endpoint, select CUDA Version 12.4, 12.3, 12.2 and 12.1 in the filter. About 10% less total available machines than 11.8.0, but higher performance. |
+## API Specification
 
-**[NOTE]** Latest image version (pre) `runpod/worker-infinity-text-embedding:0.0.1-cuda12.1.0`
-### 2. Select your models and configure your deployment with Environment Variables
-* `MODEL_NAMES`
-    
-    HuggingFace repo of a single model or multiple models separated by semicolon.      
-    
-    - Examples:
-        - **Single** Model: `BAAI/bge-small-en-v1.5`
-        - **Multiple** Models: `BAAI/bge-small-en-v1.5;intfloat/e5-large-v2;`
-* `BATCH_SIZES`
+Two flavours, one schema.
 
-    Batch Size for each model separated by semicolon. 
+- **OpenAI-compatible** – drop-in replacement for `/v1/models`, `/v1/embeddings`, so you can use this endpoint instead of the API from OpenAI by replacing the base url with the URL of your endpoint: `https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1` and use your [API key from RunPod](https://docs.runpod.io/get-started/api-keys) instead of the one from OpenAI
+- **Standard RunPod** – call `/run` or `/runsync` with a JSON body under the `input` key.  
+  Base URL: `https://api.runpod.ai/v2/<ENDPOINT_ID>`
 
-    - Default: `32`
-* `BACKEND`
+Except for transport (path + wrapper object) the JSON you send/receive is identical. The tables below describe the shared payload.
 
-    Backend for all models. 
-    
-    - Options: 
-        - `torch`
-        - `optimum`
-        - `ctranslate2`
-    - Default: `torch`
-* `DTYPES`
+### List Models
 
-    Precision for each model separated by semicolon.
+| Method | Path                | Body                                            |
+| ------ | ------------------- | ----------------------------------------------- |
+| `GET`  | `/openai/v1/models` | –                                               |
+| `POST` | `/runsync`          | `{ "input": { "openai_route": "/v1/models" } }` |
 
-    - Options:
-        - `auto`
-        - `fp16`
-        - `fp8` (**New!** Only compatible with H100 and L40S)
-    - Default: `auto`
+#### Response
 
-* `INFINITY_QUEUE_SIZE`
+```jsonc
+{
+  "data": [
+    { "id": "BAAI/bge-small-en-v1.5", "stats": {} },
+    { "id": "intfloat/e5-large-v2", "stats": {} }
+  ]
+}
+```
 
-    How many requests can be queued in the Infinity Engine. 
+---
 
-    - Default: `48000`
+### Create Embeddings
 
-* `RUNPOD_MAX_CONCURRENT_REQUESTS`
+#### Request Fields (shared)
 
-    How many requests can be processed concurrently by the RunPod Worker. 
+| Field   | Type                | Required | Description                                       |
+| ------- | ------------------- | -------- | ------------------------------------------------- |
+| `model` | string              | **Yes**  | One of the IDs supplied via `MODEL_NAMES`.        |
+| `input` | string &#124; array | **Yes**  | A single text string _or_ list of texts to embed. |
 
-    - Default: `300`
+OpenAI route vs. Standard:
 
-## Option 2: Bake models into Docker Image
-Coming soon!
+| Flavour  | Method | Path             | Body                                          |
+| -------- | ------ | ---------------- | --------------------------------------------- |
+| OpenAI   | `POST` | `/v1/embeddings` | `{ "model": "…", "input": "…" }`              |
+| Standard | `POST` | `/runsync`       | `{ "input": { "model": "…", "input": "…" } }` |
 
-# Usage
-There are two ways to use the endpoint - [OpenAI Compatibility](#openai-compatibility) matching how you would use OpenAI API, and [Standard Usage](#standard-usage) with the RunPod API. Note that reranking is only available with [Standard Usage](#standard-usage).
-## OpenAI Compatibility
-### Set up
-1. Install OpenAI Python SDK
+#### Response (both flavours)
+
+```jsonc
+{
+  "object": "list",
+  "model": "BAAI/bge-small-en-v1.5",
+  "data": [
+    { "object": "embedding", "embedding": [0.01, -0.02 /* … */], "index": 0 }
+  ],
+  "usage": { "prompt_tokens": 2, "total_tokens": 2 }
+}
+```
+
+---
+
+### Rerank Documents (Standard only)
+
+| Field         | Type   | Required | Description                                                       |
+| ------------- | ------ | -------- | ----------------------------------------------------------------- |
+| `model`       | string | **Yes**  | Any deployed reranker model                                       |
+| `query`       | string | **Yes**  | The search/query text                                             |
+| `docs`        | array  | **Yes**  | List of documents to rerank                                       |
+| `return_docs` | bool   | No       | If `true`, return the documents in ranked order (default `false`) |
+
+Call pattern
+
+```http
+POST /runsync
+Content-Type: application/json
+
+{
+  "input": {
+    "model": "BAAI/bge-reranker-large",
+    "query": "Which product has warranty coverage?",
+    "docs": [
+      "Product A comes with a 2-year warranty",
+      "Product B is available in red and blue colors",
+      "All electronics include a standard 1-year warranty"
+    ],
+    "return_docs": true
+  }
+}
+```
+
+Response contains either `scores` or the full `docs` list, depending on `return_docs`.
+
+---
+
+## Usage
+
+Below are minimal `curl` snippets so you can copy-paste from any machine.
+
+> Replace `<ENDPOINT_ID>` with your endpoint ID and `<API_KEY>` with a [RunPod API key](https://docs.runpod.io/get-started/api-keys).
+
+### OpenAI-Compatible Calls
+
 ```bash
-pip install openai
-```
-2. Initialize OpenAI client and set the API Key to your RunPod API Key, and base URL to `https://api.runpod.ai/v2/YOUR_ENDPOINT_ID/openai/v1`, where `YOUR_ENDPOINT_ID` is the ID of your endpoint, e.g. `elftzf0lld1vw1`
-```python
-from openai import OpenAI
+# List models
+curl -H "Authorization: Bearer <API_KEY>" \
+     https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/models
 
-client = OpenAI(
-  api_key=RUNPOD_API_KEY, 
-  base_url="https://api.runpod.ai/v2/YOUR_ENDPOINT_ID/openai/v1"
-)
-```
-### Embedding
-1. Define the input
-
-    You may embed a single text or a list of texts
-    - Single Text
-        ```python
-        embedding_input = "Hello, world!"
-        ```
-    - List of Texts
-        ```python
-        embedding_input = ["Hello, world!", "This is a test."]
-        ```
-2. Get the embeddings
-    ```python
-    client.embeddings.create(
-        model="YOUR_DEPLOYED_MODEL_NAME",
-        input=embedding_input
-    )
-    ```
-    Where `YOUR_DEPLOYED_MODEL_NAME` is the name of one of the models you deployed to the worker.
-
-## Standard Usage
-### Set up
-You may use `/run` (asynchronous, start job and return job ID) or `/runsync` (synchronous, wait for job to finish and return result)
-
-### Embedding
-Inputs:
-* `model`: name of one of the deployed models.
-* `input`: single text string or list of texts to embed
-#### Sample Usage on runpod.io
-```json
-{
-    "input": {
-        "model": "BAAI/bge-small-en-v1.5",
-        "input": "Hello World"
-    }
-}
+# Create embeddings
+curl -X POST \
+  -H "Authorization: Bearer <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"BAAI/bge-small-en-v1.5","input":"Hello world"}' \
+  https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/embeddings
 ```
 
-### Reranking
-Inputs:
-* `model`: name of one of the deployed models
-* `query`: query text (single string)
-* `docs`: list of documents to rerank by query
-* `return_docs`: whether to return the reranked documents or not
-#### Sample Usage on runpod.io
-```json
-{
-    "input": {
-        "model": "BAAI/bge-reranker-large",
-        "query": "Which product has warranty coverage?",
-        "docs": [
-            "Product A comes with a 2-year warranty",
-            "Product B is available in red and blue colors",
-            "All electronics include a standard 1-year warranty"
-        ],
-        "return_docs": true
-    }
-}
+### Standard RunPod Calls
+
+```bash
+# Create embeddings (wait for result)
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"input":{"model":"BAAI/bge-small-en-v1.5","input":"Hello world"}}' \
+  https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync
+
+# Rerank
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"input":{"model":"BAAI/bge-reranker-large","query":"Which product has warranty coverage?","docs":["Product A comes with a 2-year warranty","Product B is available in red and blue colors","All electronics include a standard 1-year warranty"],"return_docs":true}}' \
+  https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync
 ```
 
+---
 
-# Acknowledgements
-We'd like to thank [Michael Feil](https://github.com/michaelfeil) for creating the [Infinity Embedding Engine](https://github.com/michaelfeil/infinity) and actively being involved in the development of this worker!
+## Further Documentation
 
+- **[Infinity Engine](https://github.com/michaelfeil/infinity)** – how the ultra-fast backend works.
+- **[RunPod Docs](https://docs.runpod.io/)** – serverless concepts, limits, and API reference.
+
+---
+
+## Acknowledgements
+
+Special thanks to [Michael Feil](https://github.com/michaelfeil) for creating the Infinity engine and for his ongoing support of this project.
