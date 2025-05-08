@@ -1,18 +1,21 @@
 services:
-  embedding-worker:
-    build:
-      context: .
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    environment:
-      MODEL_NAMES: "BAAI/bge-small-en-v1.5"
-      NVIDIA_VISIBLE_DEVICES: "all"
-    volumes:
-      - ./data/runpod-volume:/runpod-volume
-    ports:
-      - "9000:9000"
+    embedding-worker:
+      build:
+        context: .
+      # comment out the "command" if you just want to run the test_input.json
+      command: >
+        python -u /handler.py --rp_serve_api --rp_api_host=0.0.0.0
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: all
+                capabilities: [gpu]
+      environment:
+        MODEL_NAMES: "BAAI/bge-small-en-v1.5"
+        NVIDIA_VISIBLE_DEVICES: "all"
+      volumes:
+        - ./data/runpod-volume:/runpod-volume
+      ports:
+        - "8000:8000"
