@@ -22,7 +22,7 @@ jobs:
           echo "Fetching the current runpod version from requirements.txt..."
 
           # Get current version (supports '~=' versioning)
-          current_version=$(grep -oP 'runpod~=\K[^ ]+' ./builder/requirements.txt)
+          current_version=$(grep -oP 'runpod~=\K[^ ]+' ./requirements.txt)
           echo "Current version: $current_version"
 
           # Get new version from PyPI
@@ -51,7 +51,7 @@ jobs:
           echo "New major/minor detected ($new_major_minor). Updating runpod version..."
 
           # Update requirements.txt with the new version while keeping '~='
-          sed -i "s/runpod~=.*/runpod~=$new_version/" ./builder/requirements.txt
+          sed -i "s/runpod~=.*/runpod~=$new_version/" ./requirements.txt
           echo "requirements.txt has been updated."
 
       - name: Create Pull Request
