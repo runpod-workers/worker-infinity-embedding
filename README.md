@@ -1,5 +1,7 @@
 # Infinity Embedding Serverless Worker
 
+[![RunPod](https://api.runpod.io/badge/runpod-workers/worker-infinity-embedding)](https://www.runpod.io/console/hub/runpod-workers/worker-infinity-embedding)
+
 > High-throughput, OpenAI-compatible text embedding & reranker powered by [Infinity](https://github.com/michaelfeil/infinity)
 
 ## Table of Contents

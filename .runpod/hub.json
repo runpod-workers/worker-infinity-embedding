@@ -1,0 +1,70 @@
+{
+  "title": "Infinity Embedding",
+  "description": "High-throughput, OpenAI-compatible text embedding & reranker powered by Infinity",
+  "type": "serverless",
+  "category": "embedding",
+  "iconUrl": "https://dummyimage.com/100x100/a0a25a/fff&text=I",
+  "config": {
+    "runsOn": "GPU",
+    "containerDiskInGb": 20,
+    "gpuIds": "AMPERE_16",
+    "gpuCount": 1,
+    "allowedCudaVersions": ["12.7", "12.6", "12.5", "12.4"],
+    "env": [
+      {
+        "key": "MODEL_NAMES",
+        "input": {
+          "name": "Model Names",
+          "type": "string",
+          "description": "One or more Hugging-Face model IDs. Separate multiple IDs with a semicolon.",
+          "default": "BAAI/bge-small-en-v1.5"
+        }
+      },
+      {
+        "key": "BATCH_SIZES",
+        "input": {
+          "name": "Batch Sizes",
+          "type": "string",
+          "description": "Per-model batch size; semicolon-separated list matching MODEL_NAMES.",
+          "default": "32"
+        }
+      },
+      {
+        "key": "BACKEND",
+        "input": {
+          "name": "Backend",
+          "type": "string",
+          "description": "Inference engine for all models: torch, optimum, or ctranslate2.",
+          "default": "torch"
+        }
+      },
+      {
+        "key": "DTYPES",
+        "input": {
+          "name": "Data Types",
+          "type": "string",
+          "description": "Precision per model (auto, fp16, fp8). Semicolon-separated, must match MODEL_NAMES.",
+          "default": "auto"
+        }
+      },
+      {
+        "key": "INFINITY_QUEUE_SIZE",
+        "input": {
+          "name": "Infinity Queue Size",
+          "type": "string",
+          "description": "Max items queueable inside the Infinity engine.",
+          "default": "48000"
+        }
+      },
+      {
+        "key": "RUNPOD_MAX_CONCURRENCY",
+        "input": {
+          "name": "Max Concurrency",
+          "type": "string",
+          "description": "Max concurrent requests the RunPod wrapper will accept.",
+          "default": "300"
+        }
+      }
+    ]
+  }
+}

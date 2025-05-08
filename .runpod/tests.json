@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "basic_test",
+      "input": {
+        "model": "BAAI/bge-small-en-v1.5",
+        "input": "Hello, world!"
+      },
+      "timeout": 10000
+    }
+  ],
+  "config": {
+    "gpuTypeId": "NVIDIA RTX A5000",
+    "gpuCount": 1,
+    "allowedCudaVersions": ["12.7", "12.6", "12.5", "12.4"]
+  }
+}
