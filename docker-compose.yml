@@ -1,0 +1,18 @@
+services:
+  embedding-worker:
+    build:
+      context: .
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      MODEL_NAMES: "BAAI/bge-small-en-v1.5"
+      NVIDIA_VISIBLE_DEVICES: "all"
+    volumes:
+      - ./data/runpod-volume:/runpod-volume
+    ports:
+      - "9000:9000"

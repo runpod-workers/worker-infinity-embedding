@@ -31,7 +31,13 @@ class EmbeddingServiceConfig:
     def model_names(self) -> list[str]:
         model_names = os.environ.get("MODEL_NAMES")
         if not model_names:
-            raise ValueError("MODEL_NAMES environment variable is required")
+            raise ValueError(
+                "Missing required environment variable 'MODEL_NAMES'.\n"
+                "Please provide at least one HuggingFace model ID, or multiple IDs separated by a semicolon.\n"
+                "Examples:\n"
+                "  MODEL_NAMES=BAAI/bge-small-en-v1.5\n"
+                "  MODEL_NAMES=BAAI/bge-small-en-v1.5;intfloat/e5-large-v2\n"
+            )
         model_names = model_names.split(";")
         model_names = [model_name for model_name in model_names if model_name]
         return model_names
@@ -46,7 +52,7 @@ class EmbeddingServiceConfig:
     def dtypes(self) -> list[str]:
         dtypes = self._get_no_required_multi("DTYPES", "auto")
         return dtypes
-    
+
     @cached_property
     def runpod_max_concurrency(self) -> int:
         return int(os.environ.get("RUNPOD_MAX_CONCURRENCY", 300))
