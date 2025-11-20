@@ -16,7 +16,7 @@
         "input": {
           "name": "Model Names",
           "type": "string",
-          "description": "One or more Hugging-Face model IDs. Separate multiple IDs with a semicolon.",
+          "description": "One or more Hugging-Face model IDs. Separate multiple IDs with a comma.",
           "default": "BAAI/bge-small-en-v1.5"
         }
       },
@@ -25,7 +25,7 @@
         "input": {
           "name": "Batch Sizes",
           "type": "string",
-          "description": "Per-model batch size; semicolon-separated list matching MODEL_NAMES.",
+          "description": "Per-model batch size; comma-separated list matching MODEL_NAMES.",
           "default": "32"
         }
       },
@@ -43,7 +43,7 @@
         "input": {
           "name": "Data Types",
           "type": "string",
-          "description": "Precision per model (auto, fp16, fp8). Semicolon-separated, must match MODEL_NAMES.",
+          "description": "Precision per model (auto, fp16, fp8). comma-separated, must match MODEL_NAMES.",
           "default": "auto"
         }
       },
@@ -61,7 +61,7 @@
         "input": {
           "name": "Max Concurrency",
           "type": "string",
-          "description": "Max concurrent requests the RunPod wrapper will accept.",
+          "description": "Max concurrent requests the Runpod wrapper will accept.",
           "default": "300"
         }
       }

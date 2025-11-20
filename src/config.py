@@ -15,7 +15,9 @@ class EmbeddingServiceConfig:
         load_dotenv()
 
     def _get_no_required_multi(self, name, default=None):
-        out = os.getenv(name, f"{default};" * len(self.model_names)).split(";")
+        out = os.getenv(name, f"{default};" * len(self.model_names))
+        out = out.replace(";", ",") # We previously split by semicolon, and want to maintain this behavior for a while.
+        out = out.split(",") 
         out = [o for o in out if o]
         if len(out) != len(self.model_names):
             raise ValueError(
@@ -33,12 +35,13 @@ class EmbeddingServiceConfig:
         if not model_names:
             raise ValueError(
                 "Missing required environment variable 'MODEL_NAMES'.\n"
-                "Please provide at least one HuggingFace model ID, or multiple IDs separated by a semicolon.\n"
+                "Please provide at least one HuggingFace model ID, or multiple IDs separated by a comma.\n"
                 "Examples:\n"
                 "  MODEL_NAMES=BAAI/bge-small-en-v1.5\n"
-                "  MODEL_NAMES=BAAI/bge-small-en-v1.5;intfloat/e5-large-v2\n"
+                "  MODEL_NAMES=BAAI/bge-small-en-v1.5,intfloat/e5-large-v2\n"
             )
-        model_names = model_names.split(";")
+        model_names = model_names.replace(";", ",") # see above, keeping support for semicolon-seperation
+        model_names = model_names.split(",")
         model_names = [model_name for model_name in model_names if model_name]
         return model_names
 
