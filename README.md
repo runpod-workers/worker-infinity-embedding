@@ -6,7 +6,7 @@ High-throughput, OpenAI-compatible text embedding & reranker powered by [Infinit
 
 ---
 
-[![RunPod](https://api.runpod.io/badge/runpod-workers/worker-infinity-embedding)](https://www.runpod.io/console/hub/runpod-workers/worker-infinity-embedding)
+[![Runpod](https://api.runpod.io/badge/runpod-workers/worker-infinity-embedding)](https://www.runpod.io/console/hub/runpod-workers/worker-infinity-embedding)
 
 ---
 
@@ -26,7 +26,7 @@ High-throughput, OpenAI-compatible text embedding & reranker powered by [Infinit
 
 1. 🐳 **Pull an image** – use the tag shown on the latest [GitHub release page](https://github.com/runpod-workers/worker-infinity-embedding/releases) (e.g. `runpod/worker-infinity-embedding:<version>`)
 2. 🔧 **Configure** – set at least `MODEL_NAMES` (see [Endpoint Configuration](#endpoint-configuration))
-3. 🚀 **Deploy** – create a [RunPod Serverless endpoint](https://docs.runpod.io/serverless/endpoints/manage-endpoints)
+3. 🚀 **Deploy** – create a [Runpod Serverless endpoint](https://docs.runpod.io/serverless/endpoints/manage-endpoints)
 4. 🧪 **Call the API** – follow the example in the [Usage](#usage) section
 
 ---
@@ -37,12 +37,12 @@ All behaviour is controlled through environment variables:
 
 | Variable                 | Required | Default | Description                                                                                                      |
 | ------------------------ | -------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
-| `MODEL_NAMES`            | **Yes**  | —       | One or more Hugging-Face model IDs. Separate multiple IDs with a semicolon.<br>Example: `BAAI/bge-small-en-v1.5` |
-| `BATCH_SIZES`            | No       | `32`    | Per-model batch size; semicolon-separated list matching `MODEL_NAMES`.                                           |
+| `MODEL_NAMES`            | **Yes**  | —       | One or more Hugging-Face model IDs. Separate multiple IDs with a comma.<br>Example: `BAAI/bge-small-en-v1.5` |
+| `BATCH_SIZES`            | No       | `32`    | Per-model batch size; comma-separated list matching `MODEL_NAMES`.                                           |
 | `BACKEND`                | No       | `torch` | Inference engine for _all_ models: `torch`, `optimum`, or `ctranslate2`.                                         |
-| `DTYPES`                 | No       | `auto`  | Precision per model (`auto`, `fp16`, `fp8`). Semicolon-separated, must match `MODEL_NAMES`.                      |
+| `DTYPES`                 | No       | `auto`  | Precision per model (`auto`, `fp16`, `fp8`). Comma-separated, must match `MODEL_NAMES`.                      |
 | `INFINITY_QUEUE_SIZE`    | No       | `48000` | Max items queueable inside the Infinity engine.                                                                  |
-| `RUNPOD_MAX_CONCURRENCY` | No       | `300`   | Max concurrent requests the RunPod wrapper will accept.                                                          |
+| `RUNPOD_MAX_CONCURRENCY` | No       | `300`   | Max concurrent requests the Runpod wrapper will accept.                                                          |
 
 ---
 
@@ -50,8 +50,8 @@ All behaviour is controlled through environment variables:
 
 Two flavours, one schema.
 
-- **OpenAI-compatible** – drop-in replacement for `/v1/models`, `/v1/embeddings`, so you can use this endpoint instead of the API from OpenAI by replacing the base url with the URL of your endpoint: `https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1` and use your [API key from RunPod](https://docs.runpod.io/get-started/api-keys) instead of the one from OpenAI
-- **Standard RunPod** – call `/run` or `/runsync` with a JSON body under the `input` key.  
+- **OpenAI-compatible** – drop-in replacement for `/v1/models`, `/v1/embeddings`, so you can use this endpoint instead of the API from OpenAI by replacing the base url with the URL of your endpoint: `https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1` and use your [API key from Runpod](https://docs.runpod.io/get-started/api-keys) instead of the one from OpenAI
+- **Standard Runpod** – call `/run` or `/runsync` with a JSON body under the `input` key.  
   Base URL: `https://api.runpod.ai/v2/<ENDPOINT_ID>`
 
 Except for transport (path + wrapper object) the JSON you send/receive is identical. The tables below describe the shared payload.
@@ -144,7 +144,7 @@ Response contains either `scores` or the full `docs` list, depending on `return_
 
 Below are minimal `curl` snippets so you can copy-paste from any machine.
 
-> Replace `<ENDPOINT_ID>` with your endpoint ID and `<API_KEY>` with a [RunPod API key](https://docs.runpod.io/get-started/api-keys).
+> Replace `<ENDPOINT_ID>` with your endpoint ID and `<API_KEY>` with a [Runpod API key](https://docs.runpod.io/get-started/api-keys).
 
 ### OpenAI-Compatible Calls
 
@@ -161,7 +161,7 @@ curl -X POST \
   https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/embeddings
 ```
 
-### Standard RunPod Calls
+### Standard Runpod Calls
 
 ```bash
 # Create embeddings (wait for result)
@@ -182,7 +182,7 @@ curl -X POST \
 ## Further Documentation
 
 - **[Infinity Engine](https://github.com/michaelfeil/infinity)** – how the ultra-fast backend works.
-- **[RunPod Docs](https://docs.runpod.io/)** – serverless concepts, limits, and API reference.
+- **[Runpod Docs](https://docs.runpod.io/)** – serverless concepts, limits, and API reference.
 
 ---
 
