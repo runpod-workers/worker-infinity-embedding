@@ -22,6 +22,7 @@ class EmbeddingService:
                     model_name_or_path=model_name,
                     batch_size=batch_size,
                     engine=self.config.backend,
+                    bettertransformer=self.config.bettertransformer,
                     dtype=dtype,
                     model_warmup=False,
                     lengths_via_tokenize=True,

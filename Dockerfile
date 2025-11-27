@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04 AS base
+FROM nvidia/cuda:12.9.0-cudnn-runtime-ubuntu22.04 AS base
 
 ENV HF_HOME=/runpod-volume
 
@@ -19,8 +19,10 @@ RUN pip install uv
 COPY requirements.txt /requirements.txt
 RUN uv pip install -r /requirements.txt --system
 
+RUN rm -rf /usr/local/lib/python3.11/dist-packages/optimum*
+
 # install torch
-RUN pip install torch==2.5.1+cu124 --index-url https://download.pytorch.org/whl/test/cu124 --no-cache-dir
+RUN python -m pip install --upgrade transformers accelerate colpali-engine
 
 # Add src files
 ADD src .

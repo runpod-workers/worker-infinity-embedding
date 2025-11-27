@@ -15,7 +15,7 @@ group "all" {
 }
 
 target "worker-1241" {
-  tags = ["${REPOSITORY}/worker-infinity-embedding:${WORKER_VERSION}-cuda12.4.1"]
+  tags = ["${REPOSITORY}/worker-infinity-embedding:${WORKER_VERSION}-cuda12.9"]
   context = "."
   dockerfile = "Dockerfile"
   output = ["type=docker,push=${PUSH}"]

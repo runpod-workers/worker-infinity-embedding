@@ -49,6 +49,10 @@ class EmbeddingServiceConfig:
         return batch_sizes
 
     @cached_property
+    def bettertransformer(self) -> bool:
+        return os.environ.get("BETTER_TRANSFORMER", "false").lower() == "true"
+
+    @cached_property
     def dtypes(self) -> list[str]:
         dtypes = self._get_no_required_multi("DTYPES", "auto")
         return dtypes
