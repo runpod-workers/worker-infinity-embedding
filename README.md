@@ -2,7 +2,9 @@
 
 ---
 
-High-throughput, OpenAI-compatible text embedding & reranker powered by [Infinity](https://github.com/michaelfeil/infinity)
+High-throughput, OpenAI-compatible **text & image embedding** & reranker powered by [Infinity](https://github.com/michaelfeil/infinity)
+
+**✨ New: Multimodal Support!** Now supports text and image embeddings (URLs & base64) with an explicit `modality` switch per request.
 
 ---
 
@@ -11,14 +13,19 @@ High-throughput, OpenAI-compatible text embedding & reranker powered by [Infinit
 ---
 
 1. [Quickstart](#quickstart)
-2. [Endpoint Configuration](#endpoint-configuration)
-3. [API Specification](#api-specification)
+2. [Multimodal Features](#multimodal-features)
+3. [Endpoint Configuration](#endpoint-configuration)
+4. [API Specification](#api-specification)
    1. [List Models](#list-models)
    2. [Create Embeddings](#create-embeddings)
    3. [Rerank Documents](#rerank-documents)
-4. [Usage](#usage)
-5. [Further Documentation](#further-documentation)
-6. [Acknowledgements](#acknowledgements)
+5. [Usage](#usage)
+   1. [List Models](#list-models-1)
+   2. [Text Embeddings](#text-embeddings)
+   3. [Image Embeddings](#image-embeddings)
+   4. [Reranking](#reranking)
+6. [Further Documentation](#further-documentation)
+7. [Acknowledgements](#acknowledgements)
 
 ---
 
@@ -31,18 +38,56 @@ High-throughput, OpenAI-compatible text embedding & reranker powered by [Infinit
 
 ---
 
+## Multimodal Features
+
+### Supported Modalities
+
+- ✅ **Text** – traditional text embeddings
+- ✅ **Image URLs** – `http://` or `https://` links to images (`.jpg`, `.png`, `.gif`, etc.)
+- ✅ **Base64 Images** – data URI format (`data:image/png;base64,...`)
+
+Each request targets a single modality:
+
+| Modality | How to request                                  | Notes                                             |
+| -------- | ------------------------------------------------ | ------------------------------------------------- |
+| `text`   | Default; or set `modality="text"`               | Works with any deployed embedding model           |
+| `image`  | Set `modality="image"`                          | Requires a multimodal model (see below)           |
+| `audio`  | Planned                                          | Returns a clear `NotImplementedError` for now     |
+
+> **Tip:** For OpenAI-compatible requests, include `"modality": "…"` alongside `model` and `input`. For native `/runsync` requests, pass `modality` inside the `input` object. If omitted, the worker assumes `text`.
+
+### Validation & Image Fetching Defaults
+
+- All inputs are validated eagerly for the chosen modality with detailed, index-aware error messages.
+- Image downloads run through a shared `httpx.AsyncClient` with tuned keep-alive limits, timeouts, and a desktop browser User-Agent—improving compatibility with CDNs that block generic clients. All of these knobs can be overridden using the `HTTP_CLIENT_*` environment variables listed below.
+
+### Multimodal Models
+
+To use image embeddings, deploy a multimodal model such as:
+- `patrickjohncyh/fashion-clip` – Fashion-focused CLIP model
+- `jinaai/jina-clip-v1` – General-purpose multimodal embeddings
+- Any other CLIP-based model with `image_embed` support
+
+> **Note:** Text-only models (like `BAAI/bge-small-en-v1.5`) will reject image inputs with a clear error message.
+
+---
+
 ## Endpoint Configuration
 
 All behaviour is controlled through environment variables:
 
-| Variable                 | Required | Default | Description                                                                                                      |
-| ------------------------ | -------- | ------- | ---------------------------------------------------------------------------------------------------------------- |
-| `MODEL_NAMES`            | **Yes**  | —       | One or more Hugging-Face model IDs. Separate multiple IDs with a semicolon.<br>Example: `BAAI/bge-small-en-v1.5` |
-| `BATCH_SIZES`            | No       | `32`    | Per-model batch size; semicolon-separated list matching `MODEL_NAMES`.                                           |
-| `BACKEND`                | No       | `torch` | Inference engine for _all_ models: `torch`, `optimum`, or `ctranslate2`.                                         |
-| `DTYPES`                 | No       | `auto`  | Precision per model (`auto`, `fp16`, `fp8`). Semicolon-separated, must match `MODEL_NAMES`.                      |
-| `INFINITY_QUEUE_SIZE`    | No       | `48000` | Max items queueable inside the Infinity engine.                                                                  |
-| `RUNPOD_MAX_CONCURRENCY` | No       | `300`   | Max concurrent requests the RunPod wrapper will accept.                                                          |
+| Variable                 | Required | Default | Description                                                                                                                                          |
+| ------------------------ | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MODEL_NAMES`            | **Yes**  | —       | One or more Hugging-Face model IDs. Separate multiple IDs with a semicolon.<br>Example: `BAAI/bge-small-en-v1.5;patrickjohncyh/fashion-clip`       |
+| `BATCH_SIZES`            | No       | `32`    | Per-model batch size; semicolon-separated list matching `MODEL_NAMES`.<br>Example: `32;16`                                                          |
+| `BACKEND`                | No       | `torch` | Inference engine for _all_ models: `torch`, `optimum`, or `ctranslate2`.                                                                            |
+| `DTYPES`                 | No       | `auto`  | Precision per model (`auto`, `fp16`, `fp8`). Semicolon-separated, must match `MODEL_NAMES`.<br>Example: `auto;auto`                                 |
+| `INFINITY_QUEUE_SIZE`    | No       | `48000` | Max items queueable inside the Infinity engine.                                                                                                     |
+| `RUNPOD_MAX_CONCURRENCY` | No       | `300`   | Max concurrent requests the RunPod wrapper will accept.                                                                                             |
+| `HTTP_CLIENT_USER_AGENT` | No       | `Mozilla/5.0 ... Chrome/120.0.0.0 Safari/537.36` | Override the browser-style User-Agent used for outbound image downloads.                                                                            |
+| `HTTP_CLIENT_TIMEOUT`    | No       | `10.0`  | Request timeout (seconds) for outbound image fetches.                                                                                               |
+| `HTTP_CLIENT_MAX_CONNECTIONS` | No | `50`    | Concurrent connection pool size for the shared `httpx` client.                                                                                      |
+| `HTTP_CLIENT_MAX_KEEPALIVE_CONNECTIONS` | No | `20` | Max keep-alive sockets retained by the shared `httpx` client.                                                                                       |
 
 ---
 
@@ -80,17 +125,18 @@ Except for transport (path + wrapper object) the JSON you send/receive is identi
 
 #### Request Fields (shared)
 
-| Field   | Type                | Required | Description                                       |
-| ------- | ------------------- | -------- | ------------------------------------------------- |
-| `model` | string              | **Yes**  | One of the IDs supplied via `MODEL_NAMES`.        |
-| `input` | string &#124; array | **Yes**  | A single text string _or_ list of texts to embed. |
+| Field      | Type                | Required | Description                                                                                                                |
+| ---------- | ------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `model`    | string              | **Yes**  | One of the IDs supplied via `MODEL_NAMES`.                                                                                 |
+| `input`    | string &#124; array | **Yes**  | Text string(s) or image URL/base64 list matching the selected modality. Order is preserved.                               |
+| `modality` | string              | No       | Required for images. Accepts `text` (default) or `image`. For OpenAI requests supply via `extra_body.modality`.           |
 
 OpenAI route vs. Standard:
 
-| Flavour  | Method | Path             | Body                                          |
-| -------- | ------ | ---------------- | --------------------------------------------- |
-| OpenAI   | `POST` | `/v1/embeddings` | `{ "model": "…", "input": "…" }`              |
-| Standard | `POST` | `/runsync`       | `{ "input": { "model": "…", "input": "…" } }` |
+| Flavour  | Method | Path             | Body                                                                   |
+| -------- | ------ | ---------------- | ---------------------------------------------------------------------- |
+| OpenAI   | `POST` | `/v1/embeddings` | `{ "model": "…", "input": "…", "modality": "text" }` (modality optional for text) |
+| Standard | `POST` | `/runsync`       | `{ "input": { "model": "…", "input": "…", "modality": "text" } }`             |
 
 #### Response (both flavours)
 
@@ -146,34 +192,90 @@ Below are minimal `curl` snippets so you can copy-paste from any machine.
 
 > Replace `<ENDPOINT_ID>` with your endpoint ID and `<API_KEY>` with a [RunPod API key](https://docs.runpod.io/get-started/api-keys).
 
-### OpenAI-Compatible Calls
+### List Models
 
 ```bash
-# List models
+# OpenAI-compatible format
 curl -H "Authorization: Bearer <API_KEY>" \
      https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/models
 
-# Create embeddings
+# Standard RunPod format
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"input":{"openai_route":"/v1/models"}}' \
+  https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync
+```
+
+### Text Embeddings
+
+```bash
+# OpenAI-compatible format
 curl -X POST \
   -H "Authorization: Bearer <API_KEY>" \
   -H "Content-Type: application/json" \
-  -d '{"model":"BAAI/bge-small-en-v1.5","input":"Hello world"}' \
+  -d '{"model":"BAAI/bge-small-en-v1.5","input":"Hello world","modality":"text"}' \
   https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/embeddings
+
+# Standard RunPod format
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"input":{"model":"BAAI/bge-small-en-v1.5","input":"Hello world","modality":"text"}}' \
+  https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync
 ```
 
-### Standard RunPod Calls
+### Image Embeddings
 
 ```bash
-# Create embeddings (wait for result)
+# OpenAI-compatible format (image URL)
 curl -X POST \
+  -H "Authorization: Bearer <API_KEY>" \
   -H "Content-Type: application/json" \
-  -d '{"input":{"model":"BAAI/bge-small-en-v1.5","input":"Hello world"}}' \
-  https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync
+  -d '{"model":"patrickjohncyh/fashion-clip","input":"https://example.com/image.jpg","modality":"image"}' \
+  https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/embeddings
 
-# Rerank
+# Standard RunPod format (base64 image)
 curl -X POST \
   -H "Content-Type: application/json" \
-  -d '{"input":{"model":"BAAI/bge-reranker-large","query":"Which product has warranty coverage?","docs":["Product A comes with a 2-year warranty","Product B is available in red and blue colors","All electronics include a standard 1-year warranty"],"return_docs":true}}' \
+  -d '{"input":{"model":"patrickjohncyh/fashion-clip","input":"data:image/png;base64,iVBORw0KG...","modality":"image"}}' \
+  https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync
+```
+
+> **Note:** Send one request per modality. If you need both text and image embeddings, issue two calls so each payload is validated consistently.
+
+### Reranking
+
+```bash
+# OpenAI-compatible format
+curl -X POST \
+  -H "Authorization: Bearer <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "BAAI/bge-reranker-large",
+    "query": "Which product has warranty coverage?",
+    "docs": [
+      "Product A comes with a 2-year warranty",
+      "Product B is available in red and blue colors",
+      "All electronics include a standard 1-year warranty"
+    ],
+    "return_docs": true
+  }' \
+  https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/rerank
+
+# Standard RunPod format
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": {
+      "model": "BAAI/bge-reranker-large",
+      "query": "Which product has warranty coverage?",
+      "docs": [
+        "Product A comes with a 2-year warranty",
+        "Product B is available in red and blue colors",
+        "All electronics include a standard 1-year warranty"
+      ],
+      "return_docs": true
+    }
+  }' \
   https://api.runpod.ai/v2/<ENDPOINT_ID>/runsync
 ```
 

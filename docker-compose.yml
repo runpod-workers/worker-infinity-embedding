@@ -13,7 +13,7 @@ services:
                 count: all
                 capabilities: [gpu]
       environment:
-        MODEL_NAMES: "BAAI/bge-small-en-v1.5"
+        MODEL_NAMES: "BAAI/bge-small-en-v1.5;patrickjohncyh/fashion-clip"
         NVIDIA_VISIBLE_DEVICES: "all"
       volumes:
         - ./data/runpod-volume:/runpod-volume

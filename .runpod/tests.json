@@ -1,12 +1,111 @@
 {
   "tests": [
     {
-      "name": "basic_test",
+      "name": "text_embedding_explicit_modality",
       "input": {
-        "model": "BAAI/bge-small-en-v1.5",
-        "input": "Hello, world!"
+        "openai_route": "/v1/embeddings",
+        "openai_input": {
+          "model": "patrickjohncyh/fashion-clip",
+          "input": "A beautiful red dress",
+          "modality": "text"
+        }
+      },
+      "expected_output": {
+        "status": "COMPLETED"
       },
       "timeout": 10000
+    },
+    {
+      "name": "text_embedding_default_modality",
+      "input": {
+        "openai_route": "/v1/embeddings",
+        "openai_input": {
+          "model": "patrickjohncyh/fashion-clip",
+          "input": "A beautiful red dress"
+        }
+      },
+      "expected_output": {
+        "status": "COMPLETED"
+      },
+      "timeout": 10000
+    },
+    {
+      "name": "image_url_embedding",
+      "input": {
+        "openai_route": "/v1/embeddings",
+        "openai_input": {
+          "model": "patrickjohncyh/fashion-clip",
+          "input": "https://raw.githubusercontent.com/pytorch/hub/master/images/dog.jpg",
+          "modality": "image"
+        }
+      },
+      "expected_output": {
+        "status": "COMPLETED"
+      },
+      "timeout": 15000
+    },
+    {
+      "name": "multiple_images",
+      "input": {
+        "openai_route": "/v1/embeddings",
+        "openai_input": {
+          "model": "patrickjohncyh/fashion-clip",
+          "input": [
+            "https://raw.githubusercontent.com/pytorch/hub/master/images/dog.jpg",
+            "https://raw.githubusercontent.com/pytorch/hub/master/images/dog.jpg"
+          ],
+          "modality": "image"
+        }
+      },
+      "expected_output": {
+        "status": "COMPLETED"
+      },
+      "timeout": 20000
+    },
+    {
+      "name": "multiple_texts",
+      "input": {
+        "openai_route": "/v1/embeddings",
+        "openai_input": {
+          "model": "patrickjohncyh/fashion-clip",
+          "input": [
+            "A red dress",
+            "A blue shirt",
+            "Black shoes"
+          ],
+          "modality": "text"
+        }
+      },
+      "expected_output": {
+        "status": "COMPLETED"
+      },
+      "timeout": 15000
+    },
+    {
+      "name": "audio_not_implemented",
+      "input": {
+        "openai_route": "/v1/embeddings",
+        "openai_input": {
+          "model": "patrickjohncyh/fashion-clip",
+          "input": "audio data",
+          "modality": "audio"
+        }
+      },
+      "expected_output": {
+        "status": "FAILED"
+      },
+      "timeout": 5000
+    },
+    {
+      "name": "get_models_list",
+      "input": {
+        "openai_route": "/v1/models",
+        "openai_input": {}
+      },
+      "expected_output": {
+        "status": "COMPLETED"
+      },
+      "timeout": 5000
     }
   ],
   "config": {
@@ -16,7 +115,7 @@
     "env": [
       {
         "key": "MODEL_NAMES",
-        "value": "BAAI/bge-small-en-v1.5"
+        "value": "patrickjohncyh/fashion-clip"
       }
     ]
   }

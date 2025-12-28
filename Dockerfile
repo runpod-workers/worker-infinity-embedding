@@ -29,4 +29,4 @@ ADD src .
 COPY test_input.json /test_input.json
 
 # start the handler
-CMD python -u /handler.py
+CMD ["python", "-u", "/handler.py"]

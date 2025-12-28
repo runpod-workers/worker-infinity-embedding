@@ -1,4 +1,6 @@
 runpod~=1.7.0
-infinity-emb[all]==0.0.76
+infinity-emb[all]==0.0.77
+optimum==1.24.0
 einops # deployment of custom code with nomic
+httpx>=0.27.0 
 git+https://github.com/pytorch-labs/float8_experimental.git
